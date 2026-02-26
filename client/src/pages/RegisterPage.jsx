@@ -26,6 +26,27 @@ const validate = ({ name, email, password, confirmPassword }) => {
     return errs;
 };
 
+/* ── Field component defined OUTSIDE RegisterPage ────────────────
+   If defined inside, React treats it as a new component type on
+   every render and unmounts/remounts the input, losing focus.    */
+const Field = ({ id, label, name, type = 'text', placeholder, autoComplete, value, onChange, error, disabled }) => (
+    <div className="form-group">
+        <label className="form-label" htmlFor={id}>{label}</label>
+        <input
+            id={id}
+            className={`form-input${error ? ' form-input--error' : ''}`}
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            autoComplete={autoComplete}
+            disabled={disabled}
+        />
+        {error && <span className="form-error">{error}</span>}
+    </div>
+);
+
 function RegisterPage() {
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -60,25 +81,6 @@ function RegisterPage() {
         }
     };
 
-    /* Reusable field helper */
-    const Field = ({ id, label, name, type = 'text', placeholder, autoComplete }) => (
-        <div className="form-group">
-            <label className="form-label" htmlFor={id}>{label}</label>
-            <input
-                id={id}
-                className={`form-input${fieldErrors[name] ? ' form-input--error' : ''}`}
-                type={type}
-                name={name}
-                value={form[name]}
-                onChange={handleChange}
-                placeholder={placeholder}
-                autoComplete={autoComplete}
-                disabled={loading}
-            />
-            {fieldErrors[name] && <span className="form-error">{fieldErrors[name]}</span>}
-        </div>
-    );
-
     return (
         <main className="page page--auth">
             <div className="auth-card">
@@ -97,8 +99,10 @@ function RegisterPage() {
                 )}
 
                 <form className="auth-form" onSubmit={handleSubmit} noValidate>
-                    <Field id="reg-name" label="Full Name" name="name" placeholder="Alice Smith" autoComplete="name" />
-                    <Field id="reg-email" label="Email" name="email" placeholder="you@example.com" type="email" autoComplete="email" />
+                    <Field id="reg-name" label="Full Name" name="name" placeholder="Alice Smith" autoComplete="name"
+                        value={form.name} onChange={handleChange} error={fieldErrors.name} disabled={loading} />
+                    <Field id="reg-email" label="Email" name="email" placeholder="you@example.com" type="email" autoComplete="email"
+                        value={form.email} onChange={handleChange} error={fieldErrors.email} disabled={loading} />
 
                     {/* Password with show/hide */}
                     <div className="form-group">
