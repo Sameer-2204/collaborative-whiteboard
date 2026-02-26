@@ -1,0 +1,7 @@
+# Root-level git ignores
+.DS_Store
+*.log
+
+# Environment files (never commit secrets)
+.env
+.env.local

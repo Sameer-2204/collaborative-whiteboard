@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: whiteboard-api
+    runtime: node
+    region: oregon          # cheapest / lowest latency for most users; change if needed
+    plan: free
+
+    # Root of the Node.js project inside the repo
+    rootDir: server
+
+    buildCommand: npm install
+    startCommand: npm start
+
+    # Health-check — Render uses this to verify the service is up
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false          # You must fill this in the Render dashboard
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure random secret
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false          # Fill in with your Vercel URL after frontend is deployed
