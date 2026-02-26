@@ -251,9 +251,3 @@ Set `VITE_SERVER_URL=https://your-backend.onrender.com` in Vercel → Settings �
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Commit your changes: `git commit -m 'feat: add your feature'`
 4. Push and open a Pull Request
-
----
-
-## 📄 License
-
-MIT — see [LICENSE](LICENSE).
