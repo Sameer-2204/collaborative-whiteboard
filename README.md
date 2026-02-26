@@ -2,6 +2,10 @@
 
 A real-time collaborative whiteboard application built with **React**, **Node.js**, **Socket.io**, and **MongoDB**. Multiple users can draw together, chat, share files, and share screens — all live in the same room.
 
+🔗 **Live Demo:** [whiteboard-eight-phi.vercel.app](https://whiteboard-eight-phi.vercel.app)  
+🛠️ **API:** [collaborative-whiteboard-l758.onrender.com](https://collaborative-whiteboard-l758.onrender.com/health)  
+📦 **Repo:** [github.com/Sameer-2204/collaborative-whiteboard](https://github.com/Sameer-2204/collaborative-whiteboard)
+
 ---
 
 ## ✨ Feature List
@@ -48,7 +52,7 @@ A real-time collaborative whiteboard application built with **React**, **Node.js
 └────────────────────────┬────────────────────────────────┘
                          │  Mongoose ODM
 ┌────────────────────────▼────────────────────────────────┐
-│                    MongoDB Atlas / Local                  │
+│                      MongoDB Atlas                        │
 │  Collections: User · Room · Stroke · Message             │
 │               Board · SharedFile                         │
 └─────────────────────────────────────────────────────────┘
@@ -80,7 +84,7 @@ whiteboard/
 ├── server/                  # Node.js + Express + Socket.io backend
 │   ├── config/              # corsOptions, db connection
 │   ├── controllers/         # auth, room, board controllers
-│   ├── middleware/          # authMiddleware, errorHandler, rateLimiter
+│   ├── middleware/           # authMiddleware, errorHandler, rateLimiter
 │   ├── models/              # User, Room, Stroke, Message, Board, SharedFile
 │   ├── routes/              # authRoutes, roomRoutes, fileRoutes, …
 │   ├── sockets/             # index (auth middleware), roomHandlers,
@@ -89,6 +93,8 @@ whiteboard/
 │   ├── .env.example         # Server env template
 │   └── server.js            # Entry point
 │
+├── render.yaml              # Render.com deployment blueprint
+├── vercel.json              # Vercel deployment config
 └── README.md
 ```
 
@@ -107,8 +113,8 @@ whiteboard/
 ### 1 · Clone and install
 
 ```bash
-git clone https://github.com/your-org/whiteboard.git
-cd whiteboard
+git clone https://github.com/Sameer-2204/collaborative-whiteboard.git
+cd collaborative-whiteboard
 
 # Install server deps
 cd server && npm install
@@ -123,7 +129,7 @@ cd ../client && npm install
 ```bash
 cd server
 cp .env.example .env
-# Edit .env and fill in MONGO_URI and JWT_SECRET at minimum
+# Edit .env — fill in MONGO_URI and JWT_SECRET at minimum
 ```
 
 **Client:**
@@ -178,105 +184,31 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ## 🌐 Deployment
 
-### Option A — Render.com (recommended for hobby projects)
+This project is deployed using:
 
-**Backend (Web Service):**
-1. Connect your GitHub repo → select the `server/` subdirectory
-2. Build command: `npm install`
-3. Start command: `npm start`
-4. Add all env vars from `server/.env.example` in the Environment section
-5. Set `NODE_ENV=production`
+| Layer | Service | URL |
+|---|---|---|
+| Frontend | Vercel | [whiteboard-eight-phi.vercel.app](https://whiteboard-eight-phi.vercel.app) |
+| Backend | Render.com | [collaborative-whiteboard-l758.onrender.com](https://collaborative-whiteboard-l758.onrender.com) |
+| Database | MongoDB Atlas | M0 free cluster |
 
-**Frontend (Static Site):**
-1. Connect repo → select `client/` subdirectory
-2. Build command: `npm install && npm run build`
-3. Publish directory: `dist`
-4. Add `VITE_SERVER_URL=https://your-backend.onrender.com`
+### Deploy your own
 
----
+**Backend → Render.com**
+1. Connect your GitHub repo at [render.com](https://render.com) → **New Web Service**
+2. Set **Root Directory** to `server` — Render will detect `render.yaml`
+3. Add env vars in the dashboard: `MONGO_URI`, `JWT_SECRET`, `CLIENT_URL`, `NODE_ENV=production`
+4. Click **Create Web Service**
 
-### Option B — Railway
-
-```bash
-# Backend
-railway up --service=whiteboard-server ./server
-
-# Frontend — deploy dist/ via Vercel or Netlify
-cd client && npm run build
-vercel deploy --prod dist/
-```
-
----
-
-### Option C — VPS (Ubuntu / Nginx)
-
-**1. Build the client:**
+**Frontend → Vercel**
 ```bash
 cd client
-VITE_SERVER_URL=https://api.yourdomain.com npm run build
+npm install -g vercel
+vercel --prod
 ```
+Set `VITE_SERVER_URL=https://your-backend.onrender.com` in Vercel → Settings → Environment Variables, then redeploy with `vercel --prod --force`.
 
-**2. Serve `dist/` with Nginx:**
-```nginx
-server {
-    listen 443 ssl;
-    server_name yourdomain.com;
-
-    root /var/www/whiteboard/client/dist;
-    index index.html;
-
-    # SPA fallthrough — all routes go to index.html
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Proxy API to Node.js
-    location /api/ {
-        proxy_pass http://localhost:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # Proxy Socket.io (WebSocket upgrade support)
-    location /socket.io/ {
-        proxy_pass http://localhost:5000/socket.io/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-    }
-
-    # Serve uploaded files
-    location /uploads/ {
-        alias /var/www/whiteboard/server/uploads/;
-    }
-}
-```
-
-**3. Run the server with PM2:**
-```bash
-cd server
-npm install -g pm2
-NODE_ENV=production pm2 start server.js --name whiteboard-api
-pm2 save && pm2 startup
-```
-
-**CORS setup for production:**
-```env
-# server/.env
-CLIENT_URL=https://yourdomain.com,https://www.yourdomain.com
-```
-
----
-
-### Docker (optional)
-
-```bash
-# Build and run both services
-docker compose up --build
-```
-
-> A `docker-compose.yml` is not included by default — add one for your own deployment pipeline.
+> **Note:** Render's free tier spins down after 15 min of inactivity (first request after sleep takes ~30 s). Use [UptimeRobot](https://uptimerobot.com) to ping `/health` every 14 minutes to keep it warm.
 
 ---
 
@@ -286,8 +218,8 @@ docker compose up --build
 - [ ] `NODE_ENV=production` is set (enables strict CORS, disables verbose error messages)
 - [ ] `CLIENT_URL` lists only your actual frontend domain(s)
 - [ ] MongoDB Atlas IP allowlist restricts access to your server IPs only
-- [ ] HTTPS is enforced (Let's Encrypt / Render / Vercel handle this automatically)
-- [ ] `server/uploads/` is either mounted as a persistent volume or migrated to S3/R2
+- [ ] HTTPS is enforced (Render / Vercel handle this automatically)
+- [ ] `server/uploads/` is either mounted as a persistent volume or migrated to S3/Cloudinary
 
 ---
 
